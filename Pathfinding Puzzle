@@ -1,0 +1,116 @@
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+
+public class Main {
+    public static class Position {
+        public int x;
+        public int y;
+        public Position previous;
+
+        public Position(int x, int y, Position previous) {
+            this.x = x;
+            this.y = y;
+            this.previous = previous;
+        }
+
+        @Override
+        public String toString() { return String.format("(%d, %d)", x, y); }
+
+        @Override
+        public boolean equals(Object o) {
+        	Position position = (Position) o;
+            return x == position.x && y == position.y;
+        }
+
+        @Override
+        public int hashCode() { return Objects.hash(x, y); }
+
+        public Position offset(int ox, int oy) { return new Position(x + ox, y + oy, this);  }
+    }
+
+    public static boolean canFindPath(int[][] map, Position position) {
+        if (position.y < 0 || position.y > map.length - 1) return false;
+        if (position.x < 0 || position.x > map[0].length - 1) return false;
+        return map[position.y][position.x] == 0;
+    }
+
+    public static List<Position> FindNeighbors(int[][] map, Position position) {
+        List<Position> neighbors = new ArrayList<>();
+        Position up = position.offset(0,  1);
+        Position down = position.offset(0,  -1);
+        Position left = position.offset(-1, 0);
+        Position right = position.offset(1, 0);
+        if (canFindPath(map, up)) neighbors.add(up);
+        if (canFindPath(map, down)) neighbors.add(down);
+        if (canFindPath(map, left)) neighbors.add(left);
+        if (canFindPath(map, right)) neighbors.add(right);
+        return neighbors;
+    }
+
+    public static List<Position> FindPath(int[][] map, Position start, Position end) {
+        boolean finished = false;
+        List<Position> used = new ArrayList<>();
+        used.add(start);
+        while (!finished) {
+            List<Position> newOpen = new ArrayList<>();
+            for(int i = 0; i < used.size(); ++i){
+            	Position position = used.get(i);
+                for (Position neighbor : FindNeighbors(map, position)) {
+                    if (!used.contains(neighbor) && !newOpen.contains(neighbor)) {
+                        newOpen.add(neighbor);
+                    }
+                }
+            }
+
+            for(Position position : newOpen) {
+                used.add(position);
+                if (end.equals(position)) {
+                    finished = true;
+                    break;
+                }
+            }
+
+            if (!finished && newOpen.isEmpty())
+                return null;
+        }
+
+        List<Position> path = new ArrayList<>();
+        Position position = used.get(used.size() - 1);
+        while(position.previous != null) {
+            path.add(0, position);
+            position = position.previous;
+        }
+        return path;
+    }
+
+    public static void main(String[] args) {
+        int[][] map = {
+                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                {0, 0, 0, 0, 0, 0, 0, 0, 0 ,0},
+                {0, 0, 0, 0, 0, 0, 0, 0, 0 ,0},
+                {0, 0, 0, 0, 0, 0, 0, 1, 1 ,1},
+                {0, 0, 0, 0, 0, 0, 0, 1, 0 ,0},
+                {0, 0, 0, 0, 0, 0, 0, 0, 0 ,0}
+        };
+
+        Position start = new Position(0, 0, null);
+        Position end = new Position(9, 9, null);
+        List<Position> path = FindPath(map, start, end);
+        List<Position> points = new ArrayList<>();
+        if (path != null) {
+            for (Position position : path) {
+            	points.add(position);
+            }
+            System.out.println(points);
+            System.out.println("Number of steps: " + points.size());
+        }
+        else
+            System.out.println("No path.");
+    }
+}
+
